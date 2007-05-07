@@ -1,0 +1,16 @@
+include "CondCore/DBCommon/data/CondDBSetup.cfi"
+
+es_source = PoolDBESSource {
+	using CondDBSetup
+
+	string connect = "sqlite_file:FoobarDiscriminator.db"
+	untracked string catalog = "file:mycatalog.xml"
+	string timetype = "runnumber"
+
+	VPSet toGet = {
+		{
+			string record = "BTagCombinedSVDiscriminatorComputerRcd"
+			string tag = "Foobar_tag"
+		}
+	}
+}

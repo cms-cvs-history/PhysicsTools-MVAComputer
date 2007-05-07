@@ -1,0 +1,18 @@
+<use name=Foundation/PluginManager>
+<use name=FWCore/Utilities>
+<use name=FWCore/Framework>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/ServiceRegistry>
+
+<use name=CondFormats/PhysicsToolsObjects>
+<use name=CondFormats/DataRecord>
+<use name=PhysicsTools/MVAComputer>
+
+<library file=MakeDiscriminatorCondDB.cc name=MakeDiscriminatorCondDB>
+   <use name=CondCore/DBOutputService>
+   <flags EDM_PLUGIN=1>
+</library>
+
+#<library file=FoobarTest.cc name=FoobarTest>
+#   <flags EDM_PLUGIN=1>
+#</library>
