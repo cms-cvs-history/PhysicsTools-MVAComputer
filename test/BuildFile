@@ -8,11 +8,11 @@
 <use name=CondFormats/DataRecord>
 <use name=PhysicsTools/MVAComputer>
 
-<library file=MakeDiscriminatorCondDB.cc name=MakeDiscriminatorCondDB>
+<library file=testWriteMVAComputerCondDB.cc name=testWriteMVAComputerCondDB>
    <use name=CondCore/DBOutputService>
    <flags EDM_PLUGIN=1>
 </library>
 
-#<library file=FoobarTest.cc name=FoobarTest>
-#   <flags EDM_PLUGIN=1>
-#</library>
+<library file=testReadMVAComputerCondDB.cc name=testReadMVAComputerCondDB>
+   <flags EDM_PLUGIN=1>
+</library>

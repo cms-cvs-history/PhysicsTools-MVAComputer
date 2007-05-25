@@ -21,9 +21,9 @@
 
 using namespace PhysicsTools::Calibration;
 
-class MakeDiscriminatorCondDB : public edm::EDAnalyzer {
+class testWriteMVAComputerCondDB : public edm::EDAnalyzer {
     public:
-	explicit MakeDiscriminatorCondDB(const edm::ParameterSet &params);
+	explicit testWriteMVAComputerCondDB(const edm::ParameterSet &params);
 
 	virtual void analyze(const edm::Event& iEvent,
 	                     const edm::EventSetup& iSetup);
@@ -34,18 +34,18 @@ class MakeDiscriminatorCondDB : public edm::EDAnalyzer {
 	std::string	record;
 };
 
-MakeDiscriminatorCondDB::MakeDiscriminatorCondDB(
+testWriteMVAComputerCondDB::testWriteMVAComputerCondDB(
 					const edm::ParameterSet &params) :
 	record(params.getUntrackedParameter<std::string>("record"))
 {
 }
 
-void MakeDiscriminatorCondDB::analyze(const edm::Event& iEvent,
-                                      const edm::EventSetup& iSetup)
+void testWriteMVAComputerCondDB::analyze(const edm::Event& iEvent,
+                                         const edm::EventSetup& iSetup)
 {
 }
 
-void MakeDiscriminatorCondDB::endJob()
+void testWriteMVAComputerCondDB::endJob()
 {
 // set up some dummy calibration by hand for testing
 
@@ -186,9 +186,9 @@ void MakeDiscriminatorCondDB::endJob()
 
 	dbService->createNewIOV<MVAComputer>(
 		computer, dbService->endOfTime(),
-		"BTagCombinedSVDiscriminatorComputerRcd");
+		"BTauGenericMVAJetTagComputerRcd");
 }
 
 // define this as a plug-in
 DEFINE_SEAL_MODULE();
-DEFINE_ANOTHER_FWK_MODULE(MakeDiscriminatorCondDB);
+DEFINE_ANOTHER_FWK_MODULE(testWriteMVAComputerCondDB);

@@ -12,7 +12,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/InputTag.h"
 
-#include "CondFormats/DataRecord/interface/BTagCombinedSVDiscriminatorComputerRcd.h"
+#include "CondFormats/DataRecord/interface/BTauGenericMVAJetTagComputerRcd.h"
 #include "PhysicsTools/MVAComputer/interface/MVAComputer.h"
 
 #include "FWCore/Framework/interface/EventSetupRecord.h"
@@ -20,9 +20,9 @@
 
 using namespace PhysicsTools;
 
-class FoobarTest : public edm::EDAnalyzer {
+class testReadMVAComputerCondDB : public edm::EDAnalyzer {
     public:
-	explicit FoobarTest(const edm::ParameterSet &params);
+	explicit testReadMVAComputerCondDB(const edm::ParameterSet &params);
 
 	virtual void analyze(const edm::Event& iEvent,
 	                     const edm::EventSetup& iSetup);
@@ -30,15 +30,15 @@ class FoobarTest : public edm::EDAnalyzer {
 	virtual void endJob();
 };
 
-FoobarTest::FoobarTest(const edm::ParameterSet &params)
+testReadMVAComputerCondDB::testReadMVAComputerCondDB(const edm::ParameterSet &params)
 {
 }
 
-void FoobarTest::analyze(const edm::Event& iEvent,
-                         const edm::EventSetup& iSetup)
+void testReadMVAComputerCondDB::analyze(const edm::Event& iEvent,
+                                        const edm::EventSetup& iSetup)
 {
 	edm::ESHandle<Calibration::MVAComputer> calib;
-	iSetup.get<BTagCombinedSVDiscriminatorComputerRcd>().get(calib);
+	iSetup.get<BTauGenericMVAJetTagComputerRcd>().get(calib);
 	MVAComputer computer(calib.product());
 
 	Variable::Value values[] = {
@@ -92,10 +92,10 @@ void FoobarTest::analyze(const edm::Event& iEvent,
 	          << std::endl;
 }
 
-void FoobarTest::endJob()
+void testReadMVAComputerCondDB::endJob()
 {
 }
 
 // define this as a plug-in
 DEFINE_SEAL_MODULE();
-DEFINE_ANOTHER_FWK_MODULE(FoobarTest);
+DEFINE_ANOTHER_FWK_MODULE(testReadMVAComputerCondDB);
