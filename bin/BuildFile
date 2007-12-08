@@ -1,0 +1,6 @@
+<bin name=mvaConvertTMVAWeights file=mvaConvertTMVAWeights.cpp>
+  <use name=FWCore/Utilities>
+  <use name=PhysicsTools/MVAComputer>
+  <use name=rootcintex>
+  <use name=rootcore>
+</bin>
