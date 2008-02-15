@@ -12,13 +12,13 @@
 //
 // Author:      Christophe Saout
 // Created:     Sat Apr 24 15:18 CEST 2007
-// $Id: ProcLikelihood.cc,v 1.3 2007/05/25 16:37:59 saout Exp $
+// $Id: ProcLikelihood.cc,v 1.8 2007/10/08 11:22:09 saout Exp $
 //
 
-#include <algorithm>
-#include <iterator>
 #include <vector>
+#include <memory>
 
+#include "CondFormats/PhysicsToolsObjects/interface/Histogram.h"  
 #include "PhysicsTools/MVAComputer/interface/VarProcessor.h"
 #include "PhysicsTools/MVAComputer/interface/Calibration.h"
 #include "PhysicsTools/MVAComputer/interface/Spline.h"
@@ -42,81 +42,167 @@ class ProcLikelihood : public VarProcessor {
 
     private:
 	struct PDF {
-		PDF(const Calibration::PDF *calib) :
-			min(calib->range.first),
-			width(calib->range.second - calib->range.first),
-			spline(calib->distr.size(), &calib->distr.front()) {}
+		virtual ~PDF() {}
+		virtual double eval(double value) const = 0;
 
-		inline double eval(double value) const;
+		double	norm;
+	};
+
+	struct SplinePDF : public PDF {
+		SplinePDF(const Calibration::HistogramF *calib) :
+			min(calib->range().min),
+			width(calib->range().width())
+		{
+			std::vector<double> values(
+					calib->values().begin() + 1,
+					calib->values().end() - 1);
+			spline.set(values.size(), &values.front());
+		}
+
+		virtual double eval(double value) const;
 
 		double		min, width;
 		Spline		spline;
 	};
 
-	struct SigBkg {
-		SigBkg(const Calibration::ProcLikelihood::SigBkg &calib) :
-			signal(&calib.signal),
-			background(&calib.background) {}
+	struct HistogramPDF : public PDF {
+		HistogramPDF(const Calibration::HistogramF *calib) :
+			histo(calib) {}
 
-		PDF	signal;
-		PDF	background;
+		virtual double eval(double value) const;
+
+		const Calibration::HistogramF	*histo;
+	};
+
+	struct SigBkg {
+		SigBkg(const Calibration::ProcLikelihood::SigBkg &calib)
+		{
+			if (calib.useSplines) {
+				signal = std::auto_ptr<PDF>(
+					new SplinePDF(&calib.signal));
+				background = std::auto_ptr<PDF>(
+					new SplinePDF(&calib.background));
+			} else {
+				signal = std::auto_ptr<PDF>(
+					new HistogramPDF(&calib.signal));
+				background = std::auto_ptr<PDF>(
+					new HistogramPDF(&calib.background));
+			}
+			double norm = (calib.signal.numberOfBins() +
+			               calib.background.numberOfBins()) / 2.0;
+			signal->norm = norm;
+			background->norm = norm;
+		}
+
+		std::auto_ptr<PDF>	signal;
+		std::auto_ptr<PDF>	background;
 	};
 
 	std::vector<SigBkg>	pdfs;
+	std::vector<double>	bias;
+	int			categoryIdx;
+	unsigned int		nCategories;
 };
 
 static ProcLikelihood::Registry registry("ProcLikelihood");
 
-inline double ProcLikelihood::PDF::eval(double value) const
+double ProcLikelihood::SplinePDF::eval(double value) const
 {
 	value = (value - min) / width;
-	return spline.eval(value) / spline.getArea();
+	return spline.eval(value) * norm / spline.getArea();
+}
+
+double ProcLikelihood::HistogramPDF::eval(double value) const
+{
+	return histo->normalizedValue(value) * norm;
 }
 
 ProcLikelihood::ProcLikelihood(const char *name,
                                const Calibration::ProcLikelihood *calib,
                                const MVAComputer *computer) :
-	VarProcessor(name, calib, computer)
+	VarProcessor(name, calib, computer),
+	pdfs(calib->pdfs.begin(), calib->pdfs.end()),
+	bias(calib->bias),
+	categoryIdx(calib->categoryIdx),
+	nCategories(1)
 {
-	std::copy(calib->pdfs.begin(), calib->pdfs.end(),
-	          std::back_inserter(pdfs));
 }
 
 void ProcLikelihood::configure(ConfIterator iter, unsigned int n)
 {
-	if (n != pdfs.size())
+	if (categoryIdx >= 0) {
+		if ((int)n < categoryIdx + 1)
+			return;
+		nCategories = pdfs.size() / (n - 1);
+		if (nCategories * (n - 1) != pdfs.size())
+			return;
+		if (!bias.empty() && bias.size() != nCategories)
+			return;
+	} else if (n != pdfs.size() || bias.size() > 1)
 		return;
 
-	while(iter)
-		iter++(Variable::FLAG_ALL);
+	int i = 0;
+	while(iter) {
+		if (categoryIdx == i++)
+			iter++(Variable::FLAG_NONE);
+		else
+			iter++(Variable::FLAG_ALL);
+	}
 
 	iter << Variable::FLAG_OPTIONAL;
 }
 
 void ProcLikelihood::eval(ValueIterator iter, unsigned int n) const
 {
-	bool empty = true;
-	double signal = 1.0;
-	double background = 1.0;
+	std::vector<SigBkg>::const_iterator pdf;
+	std::vector<SigBkg>::const_iterator last;
 
-	for(std::vector<SigBkg>::const_iterator pdf = pdfs.begin();
-	    pdf != pdfs.end(); pdf++, ++iter) {
+	int cat;
+	if (categoryIdx >= 0) {
+		ValueIterator iter2 = iter;
+		for(int i = 0; i < categoryIdx; i++)
+			++iter2;
+
+		cat = (int)*iter2;
+		if (cat < 0 || (unsigned int)cat >= nCategories) {
+			iter();
+			return;
+		}
+
+		pdf = pdfs.begin() + cat * (n - 1);
+		last = pdf + (n - 1);
+	} else {
+		cat = 0;
+		pdf = pdfs.begin();
+		last = pdfs.end();
+	}		
+
+	int vars = 0;
+	long double signal = bias.empty() ? 1.0 : bias[cat];
+	long double background = 1.0;
+
+	for(int i = 0; pdf != last; ++iter, i++) {
+		if (i == categoryIdx)
+			continue;
 		for(double *value = iter.begin();
 		    value < iter.end(); value++) {
-			empty = false;
-			double signalProb = pdf->signal.eval(*value);
-			double backgroundProb = pdf->background.eval(*value);
-			signal *= std::max(0.0, signalProb);
-			background *= std::max(0.0, backgroundProb);
+			double signalProb =
+				std::max(0.0, pdf->signal->eval(*value));
+			double backgroundProb =
+				std::max(0.0, pdf->background->eval(*value));
+			if (signalProb + backgroundProb < 1.0e-20)
+				continue;
+			vars++;
+			signal *= signalProb;
+			background *= backgroundProb;
 		}
+		++pdf;
 	}
 
-	if (empty)
+	if (!vars || signal + background < std::exp(-7 * vars - 3))
 		iter();
-	else if (signal + background > 1.0e-20)
-		iter(signal / (signal + background));
 	else
-		iter();
+		iter(signal / (signal + background));
 }
 
 } // anonymous namespace
