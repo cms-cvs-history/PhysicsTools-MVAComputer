@@ -12,7 +12,7 @@
 //
 // Author:      Christophe Saout
 // Created:     Sat Apr 24 15:18 CEST 2007
-// $Id: ProcTMVA.cc,v 1.5 2008/01/07 09:10:00 saout Exp $
+// $Id: ProcTMVA.cc,v 1.4.2.2 2008/02/25 16:16:24 saout Exp $
 //
 
 #include <string>
@@ -137,7 +137,7 @@ void ProcTMVA::eval(ValueIterator iter, unsigned int n) const
 #else
 	data.ApplyTransformation(method->GetPreprocessingMethod(), kTRUE);
 #endif
-	iter << method->GetMvaValue();
+	iter(method->GetMvaValue());
 }
 
 } // anonymous namespace
