@@ -12,7 +12,7 @@
 //
 // Author:      Christophe Saout
 // Created:     Sat Apr 24 15:18 CEST 2007
-// $Id: ProcLikelihood.cc,v 1.4.2.4 2008/04/22 12:17:22 saout Exp $
+// $Id: ProcLikelihood.cc,v 1.4.2.5 2008/04/22 16:30:13 saout Exp $
 //
 
 #include <vector>
@@ -137,7 +137,7 @@ ProcLikelihood::ProcLikelihood(const char *name,
 		categoryIdx &= ~(~((1U << (Calib::kCategoryMax + 2)) - 1) >> 1);
 
 	logOutput = (categoryIdx & (1 << Calib::kLogOutput)) != 0;
-	individual = (categoryIdx & (1 << Calib::kLogOutput)) != 0;
+	individual = (categoryIdx & (1 << Calib::kIndividual)) != 0;
 	neverUndefined =
 		(categoryIdx & (1 << Calib::kNeverUndefined)) != 0;
 	keepEmpty = (categoryIdx & (1 << Calib::kKeepEmpty)) != 0;
