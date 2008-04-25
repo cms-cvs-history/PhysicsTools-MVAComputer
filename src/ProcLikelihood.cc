@@ -12,12 +12,11 @@
 //
 // Author:      Christophe Saout
 // Created:     Sat Apr 24 15:18 CEST 2007
-// $Id: ProcLikelihood.cc,v 1.4.2.5 2008/04/22 16:30:13 saout Exp $
+// $Id: ProcLikelihood.cc,v 1.4.2.6 2008/04/24 18:35:12 saout Exp $
 //
 
 #include <vector>
 #include <memory>
-#include <cmath>
 
 #include "CondFormats/PhysicsToolsObjects/interface/Histogram.h"  
 #include "PhysicsTools/MVAComputer/interface/VarProcessor.h"
@@ -170,7 +169,7 @@ void ProcLikelihood::configure(ConfIterator iter, unsigned int n)
 	}
 
 	if (individual) {
-		for(unsigned int i = 0; i < pdfs.size(); i++)
+		for(unsigned int i = 0; i < pdfs.size(); i += nCategories)
 			iter << (neverUndefined ? Variable::FLAG_NONE
 			                        : Variable::FLAG_OPTIONAL);
 	} else
