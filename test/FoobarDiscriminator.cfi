@@ -4,8 +4,8 @@ es_source = PoolDBESSource {
 	using CondDBSetup
 
 	string connect = "sqlite_file:FoobarDiscriminator.db"
-	untracked string catalog = "file:mycatalog.xml"
-	string timetype = "runnumber"
+	untracked string timetype = "runnumber"
+	untracked string BlobStreamerName = "TBufferBlobStreamingService"
 
 	VPSet toGet = {
 		{
