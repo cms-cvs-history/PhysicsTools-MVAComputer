@@ -10,4 +10,5 @@
   <use name=PhysicsTools/MVAComputer>
   <use name=rootcintex>
   <use name=rootcore>
+  <use name=roothistmatrix>
 </bin>
